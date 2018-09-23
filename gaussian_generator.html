@@ -1,0 +1,542 @@
+<html>
+<header><title>Gaussian Kernel Generator</title></header>
+<head>
+<script type="text/javascript">
+
+// java script
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function addLine(txt)
+{
+    var result = document.getElementById("text_output");
+    var text = result.value;
+    text += txt + "\n";
+    result.value = text;
+}
+
+function printHorizontalGaussian(gaussianBell, radius, textType, extraText)
+{
+    var result = document.getElementById("text_output");
+
+    var text = result.value;
+
+    text += "// Horizontal Gaussian Blur filter\n"
+    text += "// Radius: " + radius + " pixels\n"
+    text += "// Type: " + textType + "\n"
+    if (extraText.length > 0) {
+        text += extraText;
+    }
+    text += "// Texture fetches: " + (1 + ((gaussianBell.length - 1) * 2)).toString() + "\n"
+
+    text += "float4 horizontalGaussianBlur(float2 uv, float2 invTextureSize)\n";
+    text += "{\n";
+
+    text += "  float2 im = invTextureSize;\n"
+    text += "  float4 result = float4(0, 0, 0, 0);\n"
+
+    text += "\n  // left\n"
+	for (var i = 1; i < gaussianBell.length; i++)
+	{
+        text += "  result += fetchH( im * float2(-" + gaussianBell[gaussianBell.length - i].pos.toFixed(8) +", " + "0) + uv) * " + gaussianBell[gaussianBell.length - i].value.toFixed(8) + ";\n";
+    }
+
+    text += "\n  // central sample\n"
+    text += "  result += fetchH(uv) * " + gaussianBell[0].value.toFixed(8) + ";\n";
+
+    text += "\n  // right\n"
+	for (var i = 1; i < gaussianBell.length; i++)
+	{
+        text += "  result += fetchH(im * float2(" + gaussianBell[i].pos.toFixed(8) +", " + "0) + uv) * " + gaussianBell[i].value.toFixed(8) + ";\n";
+    }
+
+    text += "  return result;\n";
+    text += "}\n\n";
+
+    result.value = text;
+}
+
+function printVerticalGaussian(gaussianBell, radius, textType)
+{
+    var result = document.getElementById("text_output");
+
+    var text = result.value;
+
+
+    text += "// Vertical Gaussian Blur filter\n"
+    text += "// Radius: " + radius + " pixels\n"
+    text += "// Type: " + textType + "\n"
+    text += "// Texture fetches: " + (1 + ((gaussianBell.length - 1) * 2)).toString() + "\n"
+
+    text += "float4 verticalGaussianBlur(float2 uv, float2 invTextureSize)\n";
+    text += "{\n";
+
+    text += "  float2 im = invTextureSize;\n"
+    text += "  float4 result = float4(0, 0, 0, 0);\n"
+
+    text += "\n  // left\n"
+	for (var i = 1; i < gaussianBell.length; i++)
+	{
+        text += "  result += fetchV(im * float2(0, -" + gaussianBell[gaussianBell.length - i].pos.toFixed(8) +") + uv) * " + gaussianBell[gaussianBell.length - i].value.toFixed(8) + ";\n";
+    }
+
+    text += "\n  // central sample\n"
+    text += "  result += fetchV(uv) * " + gaussianBell[0].value.toFixed(8) + ";\n";
+
+    text += "\n  // right\n"
+	for (var i = 1; i < gaussianBell.length; i++)
+	{
+        text += "  result += fetchV(im * float2(0, " + gaussianBell[i].pos.toFixed(8) +") + uv) * " + gaussianBell[i].value.toFixed(8) + ";\n";
+    }
+
+    text += "  return result;\n";
+    text += "}\n\n";
+
+    result.value = text;
+}
+
+
+//
+// http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling
+//
+function optimizeGaussian(gaussianBell)
+{
+    if ((gaussianBell.length & 1) == 0) {
+        return null;
+    }
+
+    var res = [];
+    res.push( { pos: 0.0, value: gaussianBell[0].value } );
+
+	for (var i = 1; i < gaussianBell.length; i+=2)
+	{
+		var o0 = i + 0;
+        var o1 = i + 1;
+        
+		var w0 = gaussianBell[o0].value;
+        var w1 = gaussianBell[o1].value;
+        
+        var offset = (w0 * o0 + w1 * o1) / (w0 + w1);
+        res.push( { pos: offset, value: w0 + w1} );
+    }   
+    
+    return res;
+}
+
+function normalizeGaussian(gaussianBell)
+{
+	// renormalize gaussian bell
+	var totalW = gaussianBell[0].value;
+	for (var i = 1; i < gaussianBell.length; i++)
+	{
+		totalW += gaussianBell[i].value * 2.0;
+    }
+    
+	for (var i = 0; i < gaussianBell.length; i++)
+	{
+        gaussianBell[i].value /= totalW;
+    }
+
+    return gaussianBell;
+}
+
+function drawGaussian(ctx, width, height, gaussianBell, color, maxValue) {
+
+    //color = "black";
+    ctx.fillStyle=color;
+    ctx.strokeStyle=color;
+    
+    ctx.beginPath();
+    
+    var steps = 16;
+    var step = width / steps;
+
+    maxValue = maxValue * 1.05;
+
+    var textOffset = -2;
+
+	for (var i = 1; i < gaussianBell.length; i++)
+	{
+        var v1 = gaussianBell[i-1].value;
+        var v2 = gaussianBell[i].value;
+
+        if (v1 <= 0.0)
+        {
+            break;
+        }
+
+        //var x1 = (i - 1) * step;
+        //var x2 = (i - 0) * step;
+        var x1 = gaussianBell[i-1].pos * step;
+        var x2 = gaussianBell[i].pos * step;
+
+        var nV1 = (v1 / maxValue);
+        var nV2 = (v2 / maxValue);
+        ctx.moveTo(x1, height - (nV1 * height))
+        ctx.lineTo(x2, height - (nV2 * height));
+        if (i == 1) {
+            ctx.fillText(v1.toFixed(3).toString(), x1, (height - (nV1 * height)) + textOffset);
+        }
+        ctx.fillText(v2.toFixed(3).toString(), x2, (height - (nV2 * height)) + textOffset);
+    }
+    ctx.lineTo(step * Math.round(gaussianBell[gaussianBell.length-1].pos + 0.5), height);
+    ctx.fillText("0.000", step * gaussianBell.length, height - 2);
+    ctx.stroke();
+}
+
+function getPrintableNumber(num) {
+    var s = num.toString();
+    if (s.length < 5)
+    {
+        var extraSpaceLeft = Math.floor((5-s.length) / 2);
+        var extraSpaceRight = 5 - (s.length + extraSpaceLeft);
+
+        var res = "";
+
+        if (extraSpaceLeft > 0)
+        {
+            res += " ".repeat(extraSpaceLeft);
+        }
+
+        res += s;
+
+        if (extraSpaceRight > 0)
+        {
+            res += " ".repeat(extraSpaceRight);
+        }
+
+        s = res;
+    }
+
+    return s;
+}
+
+function printPascalTriangle(pascalTriangle, rowsCount) {
+
+    var result = document.getElementById("tri_output");
+
+    var text = result.value;
+
+    text += "// Pascal's triangle\n"
+    text += "// https://en.wikipedia.org/wiki/Pascal%27s_triangle\n\n"
+
+
+    var i = 0;
+
+    console.log("rows " + rowsCount.toString());
+    console.log("elements " + pascalTriangle.length.toString());
+
+
+    for(var r = 0; r < rowsCount; r++)
+    {
+        var columnsCount = Math.floor(((r + 2) / 2));
+
+        var rowStart = i;
+        i = i + columnsCount;
+
+        console.log("row " + r.toString() + ", columns " + columnsCount.toString() + ", rstart " + rowStart.toString());
+
+        text += "// "
+        text += " ".repeat(3 * (rowsCount - r - 1));
+
+        for(var c = 0; c < columnsCount; c++)
+        {
+            var v = pascalTriangle[rowStart+c];
+            text += getPrintableNumber(v) + " ";
+        }
+
+        var b = (r & 1) ? -1 : -2;
+
+        for(var c = (columnsCount+b); c >= 0; c--)
+        {
+            var v = pascalTriangle[rowStart+c];
+            text += getPrintableNumber(v) + " ";
+        }
+        
+
+        text += "\n";
+    }
+
+    result.value = text;
+}
+
+function buildLinearGaussianWeightsAndOffsets(filterRadius, threshold) {
+
+    var R = filterRadius;
+    //
+    // build half of Pascal triangle
+    // https://en.wikipedia.org/wiki/Pascal%27s_triangle
+
+    var pascalTriangle = [];
+
+    var rows = R * 2 + 1;
+
+	// formula: c = prevnum * ((row+1 - column) / column)
+	// denominator increases and numerator decreases
+	for (var i = 0; i < rows; i++)
+	{
+		// first cell will always be one
+		var cell = 1.0;
+        pascalTriangle.push(Math.round(cell));
+        
+        // for the half of pascal triangle
+        var columnsCount = Math.floor(((i + 2) / 2));
+
+		// starting with second column to the end, calculate a value.
+		for (var col = 1; col < columnsCount; col++)
+		{
+			// first copute the factor to multiply against previous number
+			var factor = ((i + 1) - col) / col;
+
+			// multiply it against the previous cell.
+			factor = cell * factor;
+			cell = factor;
+
+			pascalTriangle.push(Math.round(cell));
+		}
+    }
+
+    printPascalTriangle(pascalTriangle, rows);
+
+    // build gaussian bell
+	var totalWeight = Math.pow(2.0, (rows - 1));
+	var itw = 1.0 / totalWeight;
+    
+    var gaussianBell = [];
+
+	// build gaussian bell from pascal triangle
+	var lastElementIndex = pascalTriangle.length - 1;
+	for ( var i = 0; i <= R; i++ )
+	{
+		var v = pascalTriangle[lastElementIndex - i];
+		var gaussian = itw * v;
+
+		gaussianBell.push( { pos: i, value: gaussian} );
+    }
+    
+    var bellSizeBeforeClamp = gaussianBell.length;
+    
+    // remove small weights
+    gaussianBell = normalizeGaussian(gaussianBell);
+	for (var i = 0; i < gaussianBell.length; i++)
+	{
+        console.log("w " + gaussianBell[i].value.toString());
+        console.log("t " + threshold.toString());
+        
+		if (gaussianBell[i].value < threshold)
+		{
+            console.log("weight was removed");
+            gaussianBell.splice(i, 1);
+			i--;
+		}
+    }
+
+    // optimized gaussian bell
+    optimizedGaussianBell = [];
+	for (var i = 0; i < gaussianBell.length; i++)
+	{
+        optimizedGaussianBell.push(gaussianBell[i]);
+    }
+    
+    // guarantee that the number of weight are odd number (to have only one center in optimized kernel)
+    if ((optimizedGaussianBell.length & 1) == 0)
+    {
+        optimizedGaussianBell.pop();
+    }
+    optimizedGaussianBell = normalizeGaussian(optimizedGaussianBell);
+    optimizedGaussianBell = optimizeGaussian(optimizedGaussianBell);
+    
+    gaussianBell = normalizeGaussian(gaussianBell);
+
+/*    
+    // 'standart' gaussian bell
+    var gaussianBell2 = [];
+    var ro =  filterRadius / 3.0; // heuristic
+	var gk1 = 1.0 / Math.sqrt(2.0 * Math.PI * ro * ro);
+    var gk2 = (2.0 * ro * ro);
+    
+	for (var i = 0; i < filterRadius; i++)
+	{
+		var x = i;
+		var gX = gk1 * Math.exp( -(x*x) / gk2 );
+		gaussianBell2.push( { pos: x, value: gX} );
+    }
+    
+    gaussianBell2 = normalizeGaussian(gaussianBell2);
+*/    
+
+    // print gaussian kernel
+    var txt = "Gaussian\n";
+	for (var i = 0; i < gaussianBell.length; i++)
+	{
+        txt = txt + gaussianBell[i].value.toString() + "\n";
+    }
+    console.log(txt);
+    
+/*    
+    // print gaussian kernel
+    txt = "Gaussian2\n";
+	for (var i = 0; i < gaussianBell2.length; i++)
+	{
+        txt = txt + gaussianBell2[i].value.toString() + "\n";
+    }
+    console.log(txt);
+*/    
+
+    // draw gaussian bell
+    var canvas = document.getElementById("myCanvas");
+
+    var width = canvas.width;
+    var height = canvas.height;    
+   
+    var ctx = canvas.getContext("2d");    
+    ctx.font="10px Consolas";
+
+    ctx.fillStyle="#3d3e43";
+    ctx.fillRect(0,0,width,height);
+
+    ctx.fillStyle="#9dc7ce";
+    ctx.strokeStyle="#9dc7ce";
+    
+    ctx.beginPath();
+    
+    ctx.fillText("Curve shape", 3, 10);
+
+    ctx.stroke();
+    
+    //ctx.clearRect(Math.random() * 30,20,100,50);    
+
+    var maxValue = 0.0;
+	for (var i = 0; i < gaussianBell.length; i++)
+	{
+        maxValue = Math.max(gaussianBell[i].value, maxValue);
+    }
+	for (var i = 0; i < optimizedGaussianBell.length; i++)
+	{
+        maxValue = Math.max(optimizedGaussianBell[i].value, maxValue);
+    }
+    
+
+    drawGaussian(ctx, width, height, gaussianBell, "#9dc7ce", maxValue);
+    //drawGaussian(ctx, width, height, optimizedGaussianBell, "red", maxValue);
+
+    printHorizontalGaussian(optimizedGaussianBell, filterRadius, "linear sampling", "// http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/\n");
+    printVerticalGaussian(optimizedGaussianBell, filterRadius, "linear sampling");
+
+    addLine("//===============================================================")
+
+    printHorizontalGaussian(gaussianBell, filterRadius, "discrete sampling", "// http://prideout.net/archive/bloom/index.php#Gauss\n");
+    printVerticalGaussian(gaussianBell, filterRadius, "discrete sampling");
+    
+    return txt;
+}
+
+
+function buttonPress(event, element) {
+    var key = event.which || event.keyCode;
+    if (key != '13') {
+        return;
+    }
+
+    var result = document.getElementById("text_output");
+    var filterWidth = parseInt(element.value, 10);
+    if (isNaN(filterWidth)) {
+        result.value = "Error: Can't parse filter width.";
+        return;
+    }
+
+    var threshold = document.getElementById("threshold_input");
+    var th = parseFloat(threshold.value);
+
+    console.log("Filter width : " + filterWidth);
+    console.log("Filter threshold : " + th);
+    result.value = "";
+
+    var t = document.getElementById("tri_output");
+    t.value = "";
+
+    // 0.003921568627451 = 1/255 (if weight lesser than threshold it will be too small to affect to result)
+    buildLinearGaussianWeightsAndOffsets(filterWidth, 0.003921568627451); 
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+</script>
+</head>
+<style type="text/css" media="screen">
+
+input {
+    background-color: #393a3f;
+    color: #fabc71;
+    font-family: monospace;
+}
+
+textarea {
+    background-color: #393a3f;
+    color: #9dc7ce;
+    font-family: monospace;
+}
+
+body {
+    background-color: #282a36;
+    color: #94989c;
+    font-family: monospace;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #282a36; 
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555; 
+}
+
+</style>
+
+<body>
+
+    <div>
+        <table>
+            <tr>
+                <td>Type filter width and press 'ENTER'</td>
+                <td><input type="text" id=text_input onkeydown="buttonPress(event, this)" value="6"></td>
+            </tr>
+            <tr>
+                <td>Gaussian weight threshold</td>
+                <td><input type="text" id=threshold_input value="0.0039215"></td>
+            </tr>
+        </table>
+    </div>
+    
+
+    </br>
+
+    <div>
+        <canvas id="myCanvas" width="600" height="300"
+            style="border:1px solid #c3c3c3;">
+            Your browser does not support the canvas element.
+        </canvas>  
+    </div>  
+
+    </br>
+
+    <div>
+            <textarea rows="32" cols="120" id=text_output>// shader source code</textarea>    
+    </div>
+
+    <div>
+        <textarea rows="30" cols="120" id=tri_output>// pascal triangle</textarea>    
+    </div>
+
+    <div>
+        Guassian Kernel Generator by Sergey Makeev
+    </div>
+    
+</body>
