@@ -21,6 +21,33 @@ function printHorizontalGaussian(gaussianBell, radius, textType, extraText)
 
     var text = result.value;
 
+    text += "// Weights\n"
+    text += "// { "
+
+	for (var i = 0; i < gaussianBell.length; i++)
+	{
+        text += gaussianBell[i].value.toFixed(8) +"f";
+        if (i == gaussianBell.length-1) {
+            text += " }\n";
+        } else {
+            text += ", ";
+        }
+    }
+
+    text += "// Offsets\n"
+    text += "// { "
+
+	for (var i = 0; i < gaussianBell.length; i++)
+	{
+        text += gaussianBell[i].pos.toFixed(8) +"f";
+        if (i == gaussianBell.length-1) {
+            text += " }\n";
+        } else {
+            text += ", ";
+        }
+    }
+
+
     text += "// Horizontal Gaussian Blur filter\n"
     text += "// Radius: " + radius + " pixels\n"
     text += "// Type: " + textType + "\n"
@@ -28,7 +55,7 @@ function printHorizontalGaussian(gaussianBell, radius, textType, extraText)
         text += extraText;
     }
     text += "// Texture fetches: " + (1 + ((gaussianBell.length - 1) * 2)).toString() + "\n"
-
+   
     text += "float4 horizontalGaussianBlur(float2 uv, float2 invTextureSize)\n";
     text += "{\n";
 
