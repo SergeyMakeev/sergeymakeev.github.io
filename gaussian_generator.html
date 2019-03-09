@@ -15,66 +15,110 @@ function addLine(txt)
     result.value = text;
 }
 
-function printHorizontalGaussian(gaussianBell, radius, textType, extraText)
+function getWeightUniformName(weightIndex)
+{
+    return "weights[" + weightIndex.toFixed() + "]";
+/*
+    var rem = (weightIndex % 4);
+    var suffix = "_"
+    if (rem == 0)
+        suffix = ".x"
+    else if (rem == 1)
+        suffix = ".y"
+    else if (rem == 2)
+        suffix = ".z"
+    else if (rem == 3)
+        suffix = ".w"
+    else
+        suffix = "_";
+
+    var num = 3 + Math.floor(weightIndex / 4);
+
+    return "CB1.Params" + num.toFixed() + suffix;
+*/    
+}
+
+function getPositionUniformName(posIndex)
+{
+    return "offsets[" + posIndex.toFixed() + "]";
+/*
+    return getWeightUniformName(posIndex + 8);
+*/    
+}
+
+function printHorizontalGaussian(external_weights, external_offsets, gen_comments, gaussianBell, radius, namePrefix, textType, extraText)
 {
     var result = document.getElementById("text_output");
 
     var text = result.value;
 
-    text += "// Weights\n"
-    text += "// { "
+    if (external_weights && gen_comments) {
+        text += "// w[] = { "
 
-	for (var i = 0; i < gaussianBell.length; i++)
-	{
-        text += gaussianBell[i].value.toFixed(8) +"f";
-        if (i == gaussianBell.length-1) {
-            text += " }\n";
-        } else {
-            text += ", ";
+        for (var i = 0; i < gaussianBell.length; i++)
+        {
+            text += gaussianBell[i].value.toFixed(8) +"f";
+            if (i == gaussianBell.length-1) {
+                text += " }\n";
+            } else {
+                text += ", ";
+            }
         }
     }
 
-    text += "// Offsets\n"
-    text += "// { "
+    if (external_offsets && gaussianBell.length > 1 && gen_comments) {
+        text += "// o[] = { "
 
-	for (var i = 0; i < gaussianBell.length; i++)
-	{
-        text += gaussianBell[i].pos.toFixed(8) +"f";
-        if (i == gaussianBell.length-1) {
-            text += " }\n";
-        } else {
-            text += ", ";
+        for (var i = 1; i < gaussianBell.length; i++)
+        {
+            text += gaussianBell[i].pos.toFixed(8) +"f";
+            if (i == gaussianBell.length-1) {
+                text += " }\n";
+            } else {
+                text += ", ";
+            }
         }
     }
 
-
-    text += "// Horizontal Gaussian Blur filter\n"
-    text += "// Radius: " + radius + " pixels\n"
-    text += "// Type: " + textType + "\n"
-    if (extraText.length > 0) {
-        text += extraText;
+    var numFetches = (1 + ((gaussianBell.length - 1) * 2));
+    if (gen_comments) {
+        text += "// Horizontal Gaussian Blur filter\n"
+        text += "// Radius: " + radius + " pixels\n"
+        text += "// Type: " + textType + "\n"
+        if (extraText.length > 0) {
+            text += extraText;
+        }
+        text += "// Texture fetches: " + numFetches.toString() + "\n"
     }
-    text += "// Texture fetches: " + (1 + ((gaussianBell.length - 1) * 2)).toString() + "\n"
    
-    text += "float4 horizontalGaussianBlur(float2 uv, float2 invTextureSize)\n";
+    text += "float4 " + namePrefix + "HBlur_" + numFetches.toString() + "(float2 uv, float2 invTextureSize)\n";
     text += "{\n";
 
     text += "  float2 im = invTextureSize;\n"
-    text += "  float4 result = float4(0, 0, 0, 0);\n"
-
-    text += "\n  // left\n"
-	for (var i = 1; i < gaussianBell.length; i++)
-	{
-        text += "  result += fetchH( im * float2(-" + gaussianBell[gaussianBell.length - i].pos.toFixed(8) +", " + "0) + uv) * " + gaussianBell[gaussianBell.length - i].value.toFixed(8) + ";\n";
+    if (gen_comments) {
+        text += "\n  // central sample\n"
     }
 
-    text += "\n  // central sample\n"
-    text += "  result += fetchH(uv) * " + gaussianBell[0].value.toFixed(8) + ";\n";
-
-    text += "\n  // right\n"
+    var o = external_offsets ? getPositionUniformName(0) : gaussianBell[0].pos.toFixed(8); 
+    var w = external_weights ? getWeightUniformName(0) : gaussianBell[0].value.toFixed(8);
+    text += "  float4 result = fetchH(uv) * " + w + ";\n";
+    if (gen_comments) {
+        text += "\n  // left\n"
+    }
 	for (var i = 1; i < gaussianBell.length; i++)
 	{
-        text += "  result += fetchH(im * float2(" + gaussianBell[i].pos.toFixed(8) +", " + "0) + uv) * " + gaussianBell[i].value.toFixed(8) + ";\n";
+        o = external_offsets ? getPositionUniformName(gaussianBell.length - i) : gaussianBell[gaussianBell.length - i].pos.toFixed(8); 
+        w = external_weights ? getWeightUniformName(gaussianBell.length - i) : gaussianBell[gaussianBell.length - i].value.toFixed(8);
+        text += "  result += fetchH( im * float2(-" + o +", " + "0) + uv) * " + w + ";\n";
+    }
+    if (gen_comments) {
+        text += "\n  // right\n"
+    }
+	for (var i = 1; i < gaussianBell.length; i++)
+	{
+        o = external_offsets ? getPositionUniformName(i) : gaussianBell[i].pos.toFixed(8); 
+        w = external_weights ? getWeightUniformName(i) : gaussianBell[i].value.toFixed(8);
+        text += "  result += fetchH(im * float2(" + o +", " + "0) + uv) * " + w + ";\n";
     }
 
     text += "  return result;\n";
@@ -83,37 +127,50 @@ function printHorizontalGaussian(gaussianBell, radius, textType, extraText)
     result.value = text;
 }
 
-function printVerticalGaussian(gaussianBell, radius, textType)
+function printVerticalGaussian(external_weights, external_offsets, gen_comments, gaussianBell, radius, namePrefix, textType)
 {
     var result = document.getElementById("text_output");
 
     var text = result.value;
 
+    var numFetches = (1 + ((gaussianBell.length - 1) * 2));
+    if (gen_comments) {
+        text += "// Vertical Gaussian Blur filter\n"
+        text += "// Radius: " + radius + " pixels\n"
+        text += "// Type: " + textType + "\n"
+        text += "// Texture fetches: " + numFetches.toString() + "\n"
+    }
 
-    text += "// Vertical Gaussian Blur filter\n"
-    text += "// Radius: " + radius + " pixels\n"
-    text += "// Type: " + textType + "\n"
-    text += "// Texture fetches: " + (1 + ((gaussianBell.length - 1) * 2)).toString() + "\n"
-
-    text += "float4 verticalGaussianBlur(float2 uv, float2 invTextureSize)\n";
+    text += "float4 " + namePrefix + "VBlur_" + numFetches.toString() + "(float2 uv, float2 invTextureSize)\n";
     text += "{\n";
 
     text += "  float2 im = invTextureSize;\n"
-    text += "  float4 result = float4(0, 0, 0, 0);\n"
-
-    text += "\n  // left\n"
-	for (var i = 1; i < gaussianBell.length; i++)
-	{
-        text += "  result += fetchV(im * float2(0, -" + gaussianBell[gaussianBell.length - i].pos.toFixed(8) +") + uv) * " + gaussianBell[gaussianBell.length - i].value.toFixed(8) + ";\n";
+    if (gen_comments) {
+        text += "\n  // central sample\n"
     }
 
-    text += "\n  // central sample\n"
-    text += "  result += fetchV(uv) * " + gaussianBell[0].value.toFixed(8) + ";\n";
+    var o = external_offsets ? getPositionUniformName(0) : gaussianBell[0].pos.toFixed(8); 
+    var w = external_weights ? getWeightUniformName(0) : gaussianBell[0].value.toFixed(8);
+    text += "  float4 result = fetchV(uv) * " + w + ";\n";
 
-    text += "\n  // right\n"
+    if (gen_comments) {
+        text += "\n  // left\n"
+    }
 	for (var i = 1; i < gaussianBell.length; i++)
 	{
-        text += "  result += fetchV(im * float2(0, " + gaussianBell[i].pos.toFixed(8) +") + uv) * " + gaussianBell[i].value.toFixed(8) + ";\n";
+        o = external_offsets ? getPositionUniformName(gaussianBell.length - i) : gaussianBell[gaussianBell.length - i].pos.toFixed(8); 
+        w = external_weights ? getWeightUniformName(gaussianBell.length - i) : gaussianBell[gaussianBell.length - i].value.toFixed(8);
+        text += "  result += fetchV(im * float2(0, -" + o +") + uv) * " + w + ";\n";
+    }
+
+    if (gen_comments) {
+        text += "\n  // right\n"
+    }
+	for (var i = 1; i < gaussianBell.length; i++)
+	{
+        o = external_offsets ? getPositionUniformName(i) : gaussianBell[i].pos.toFixed(8); 
+        w = external_weights ? getWeightUniformName(i) : gaussianBell[i].value.toFixed(8);
+        text += "  result += fetchV(im * float2(0, " + o +") + uv) * " + w + ";\n";
     }
 
     text += "  return result;\n";
@@ -287,7 +344,7 @@ function printPascalTriangle(pascalTriangle, rowsCount) {
     result.value = text;
 }
 
-function buildLinearGaussianWeightsAndOffsets(filterRadius, threshold) {
+function buildLinearGaussianWeightsAndOffsets(filterRadius, threshold, external_weights, gen_comments) {
 
     var R = filterRadius;
     //
@@ -447,13 +504,15 @@ function buildLinearGaussianWeightsAndOffsets(filterRadius, threshold) {
     drawGaussian(ctx, width, height, gaussianBell, "#9dc7ce", maxValue);
     //drawGaussian(ctx, width, height, optimizedGaussianBell, "red", maxValue);
 
-    printHorizontalGaussian(optimizedGaussianBell, filterRadius, "linear sampling", "// http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/\n");
-    printVerticalGaussian(optimizedGaussianBell, filterRadius, "linear sampling");
+    printHorizontalGaussian(external_weights, external_weights, gen_comments, optimizedGaussianBell, filterRadius, "linear", "linear sampling", "// http://rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/\n");
+    printVerticalGaussian(external_weights, external_weights, gen_comments, optimizedGaussianBell, filterRadius, "linear", "linear sampling");
 
-    addLine("//===============================================================")
+    if (gen_comments) {
+        addLine("//===============================================================")
+    }
 
-    printHorizontalGaussian(gaussianBell, filterRadius, "discrete sampling", "// http://prideout.net/archive/bloom/index.php#Gauss\n");
-    printVerticalGaussian(gaussianBell, filterRadius, "discrete sampling");
+    printHorizontalGaussian(external_weights, external_weights, gen_comments, gaussianBell, filterRadius, "discrete", "discrete sampling", "// http://prideout.net/archive/bloom/index.php#Gauss\n");
+    printVerticalGaussian(external_weights, external_weights, gen_comments, gaussianBell, filterRadius, "discrete", "discrete sampling");
     
     return txt;
 }
@@ -464,6 +523,12 @@ function buttonPress(event, element) {
     if (key != '13') {
         return;
     }
+
+    var embeded_weights = document.getElementById("embeded_weights");
+    var external_weights = !embeded_weights.checked;
+
+    var generate_comments = document.getElementById("generate_comments");
+    var gen_comments = generate_comments.checked;
 
     var result = document.getElementById("text_output");
     var filterWidth = parseInt(element.value, 10);
@@ -483,7 +548,7 @@ function buttonPress(event, element) {
     t.value = "";
 
     // 0.003921568627451 = 1/255 (if weight lesser than threshold it will be too small to affect to result)
-    buildLinearGaussianWeightsAndOffsets(filterWidth, 0.003921568627451); 
+    buildLinearGaussianWeightsAndOffsets(filterWidth, 0.003921568627451, external_weights, gen_comments); 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -539,6 +604,14 @@ body {
             <tr>
                 <td>Gaussian weight threshold</td>
                 <td><input type="text" id=threshold_input value="0.0039215"></td>
+            </tr>
+            <tr>
+                <td>Generate embedded weights</td>
+                <td><input type="checkbox" id="embeded_weights" checked></td>
+            </tr>
+            <tr>
+                <td>Generate comments</td>
+                <td><input type="checkbox" id="generate_comments" checked></td>
             </tr>
         </table>
     </div>
