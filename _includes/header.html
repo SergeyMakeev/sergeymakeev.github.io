@@ -71,20 +71,20 @@
     <div>
     {% else %}
     <div class="sidebar-mini">
-      Sergey Makeev (<small><a href="mailto:sergeymakeev@hotmail.com">Email</a>, <a href="https://twitter.com/SergeyMakeev">Twitter</a></small>)
+      Sergey Makeev (<small><a href="mailto:sergeymakeev@hotmail.com">Email</a>, <a href="https://twitter.com/SergeyMakeev">Twitter</a>, <a href="https://www.linkedin.com/in/sergeymakeev/">LinkedIn</a></small>)
     </div>
 
     <div class="sidebar-content">
     {% endif %}
       <h4>Author</h4>
       <p>
-      Sergey Makeev (<small><a href="mailto:sergeymakeev@hotmail.com">Email</a>, <a href="https://twitter.com/SergeyMakeev">Twitter</a></small>)
+      Sergey Makeev (<small><a href="mailto:sergeymakeev@hotmail.com">Email</a>, <a href="https://twitter.com/SergeyMakeev">Twitter</a>, <a href="https://www.linkedin.com/in/sergeymakeev/">LinkedIn</a></small>)
       </p>
       <p>
       <a href="/about/">About me</a>
       </p>
 
-      <h4>Posts</h4>
+      <h4>Recent posts</h4>
       <ul style="padding-left: 20px;">
       {% for post in site.posts limit:10 %}
         <li>
@@ -93,7 +93,10 @@
       {% endfor %}
       </ul>
       <p>
-      If you like this blog, you should follow it <a href="/feed/">via RSS</a> and read <a href="/archives/">older posts</a>. Here are the recent posts:
+        <a href="/feed/">RSS posts</a>
+      </p>
+      <p>
+        <a href="/archives/">Archives</a>.
       </p>
     </div>
   </div>
