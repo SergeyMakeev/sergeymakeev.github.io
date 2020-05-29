@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - materials - standard</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+	</head>
+
+	<body>
+		<div id="info">
+			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - webgl physically based material from OBJ file<br/>
+			Mechy Roblox model <a href="https://www.linkedin.com/in/sean-binder-7657612/" target="_blank" rel="noopener">by Sean Binder</a> 
+		</div>
+
+		<script type="module">
+
+			import * as THREE from './threejs/three.module.js';
+
+			import Stats from './jsm/libs/stats.module.js';
+
+			import { TrackballControls } from './jsm/controls/TrackballControls.js';
+			import { OBJLoader } from './jsm/loaders/OBJLoader.js';
+			import { MTLLoader } from './jsm/loaders/MTLLoader.js';
+			import { RGBELoader } from './jsm/loaders/RGBELoader.js';
+
+			var statsEnabled = true;
+
+			var container, stats;
+
+			var camera, scene, renderer, controls;
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				renderer.outputEncoding = THREE.sRGBEncoding;
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 0.9;
+
+				//
+
+				scene = new THREE.Scene();
+
+				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.01, 1000 );
+				camera.position.x = 15;
+
+				controls = new TrackballControls( camera, renderer.domElement );
+
+				//
+
+				scene.add( new THREE.HemisphereLight( 0x443333, 0x222233, 1.0 ) );
+
+				var textureLoader = new THREE.TextureLoader()
+							.setPath( 'models/mechy/' );
+
+				var pbrMaterials = {};
+							
+				//
+				new MTLLoader()
+					.setPath( 'models/mechy/' )
+					.load( 'mechy.mtl', function ( materials ) {
+
+						console.log("mtl file loaded.");
+						// PBR materials
+						for ( var materialName in materials.materialsInfo ) {
+							var mat = materials.materialsInfo[ materialName ];
+							console.log("mat : " + materialName);
+
+							var texName = mat["map_kd"];
+							texName = texName.substring(0, texName.lastIndexOf('.')) || texName;
+
+							var albedoName = texName + ".png";
+							console.log(" albedo : " + albedoName);
+
+							var normalMapName = texName + "_nm.png";
+							console.log(" normalmap : " + normalMapName);
+
+							var roughnessMetalnessName = texName + "_rm.png";
+							console.log(" roughness/metalness : " + roughnessMetalnessName);
+
+							var material = new THREE.MeshStandardMaterial();
+
+							material.roughness = 1; // attenuates roughnessMap
+							material.metalness = 1; // attenuates metalnessMap
+
+							var diffuseMap = textureLoader.load( albedoName );
+							diffuseMap.encoding = THREE.sRGBEncoding;
+							material.map = diffuseMap;
+							// roughness is in G channel, metalness is in B channel
+							material.metalnessMap = material.roughnessMap = textureLoader.load( roughnessMetalnessName );
+							material.normalMap = textureLoader.load( normalMapName );
+
+							material.map.wrapS = THREE.RepeatWrapping;
+							material.roughnessMap.wrapS = THREE.RepeatWrapping;
+							material.metalnessMap.wrapS = THREE.RepeatWrapping;
+							material.normalMap.wrapS = THREE.RepeatWrapping;
+
+							pbrMaterials[materialName] = material;
+						}						
+
+						new OBJLoader()
+							.setPath( 'models/mechy/' )
+							.load( 'mechy.obj', function ( group ) {
+								console.log("obj file loaded.");
+
+								group.traverse( function ( child ) {
+									if ( child.isMesh ) {
+										console.log("name = " + child.name);
+
+										// assign pbr materials
+										child.material = pbrMaterials[child.name];
+									}
+								} );
+
+								group.position.x = - 0.45;
+								group.rotation.y = - Math.PI / 2;
+								scene.add( group );
+
+							});
+					});
+
+				new RGBELoader()
+					.setDataType( THREE.UnsignedByteType )
+					.setPath( 'textures/equirectangular/' )
+					.load( 'sunny_vondelpark_1k.hdr', function ( hdrEquirect ) {
+
+						var hdrCubeRenderTarget = pmremGenerator.fromEquirectangular( hdrEquirect );
+						hdrEquirect.dispose();
+						pmremGenerator.dispose();
+
+						scene.background = hdrCubeRenderTarget.texture;
+						scene.environment = hdrCubeRenderTarget.texture;
+
+					} );
+
+				var pmremGenerator = new THREE.PMREMGenerator( renderer );
+				pmremGenerator.compileEquirectangularShader();
+
+				//
+
+				if ( statsEnabled ) {
+
+					stats = new Stats();
+					container.appendChild( stats.dom );
+
+				}
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			//
+
+			function onWindowResize() {
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+			}
+
+			//
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				controls.update();
+				renderer.render( scene, camera );
+
+				if ( statsEnabled ) stats.update();
+
+			}
+
+		</script>
+
+	</body>
+</html>
