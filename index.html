@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Blog Test</title>
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <script type="text/javascript" src="js/marked.min.js"></script>
+  <script type="text/javascript" src="js/highlight.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/custom_style.css">
+  <link rel="stylesheet" type="text/css" href="css/dracula.css">
+</head>
+<body>
+  <div id="content"></div>
+  <script>
+    const escapeMap = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    };
+
+    function escapeForHTML(input) {
+        return input.replace(/([&<>'"])/g, char => escapeMap[char]);
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    var targetUrl = urlParams.get("url");
+    if (targetUrl) {
+        //console.log("target: '" + targetUrl + "'");
+    } else {
+        targetUrl = "/README.md";
+    }
+
+    var siteRoot = "https://raw.githubusercontent.com/SergeyMakeev/sergeymakeev.github.io/master";
+    targetUrl = siteRoot + targetUrl;
+
+    // Create custom marked renderer
+    const renderer = new marked.Renderer();
+    renderer.code = (code, language) => {
+
+        const validLang = !!(language && hljs.getLanguage(language));
+
+        const highlighted = validLang
+            ? hljs.highlight(code, { language}).value
+            : escapeForHTML(code);
+
+        // render the highlighted code with `hljs` class.
+        return `<pre><code class="hljs ${language}">${highlighted}</code></pre>`;
+    };
+    marked.setOptions({ renderer });
+
+    // we don't want caching
+    $.ajaxSetup({ cache: false });    
+    $.get( targetUrl, function( data ) {
+      //console.log(data);
+      document.getElementById('content').innerHTML = marked.parse(data);
+
+      var currentUrl = location.protocol + '//' + location.host + location.pathname;
+      var anchors = document.getElementsByTagName("a");
+
+        for (var i = 0; i < anchors.length; i++) {
+            var url = anchors[i].getAttribute("href")
+            if (url && url.startsWith("/")) {
+                //console.log("local ref: " + url);
+                var newUrl = currentUrl + "?url=" + url;
+                //console.log(newUrl);
+                anchors[i].href = newUrl;
+            }
+        }      
+   });
+  </script>
+</body>
+</html>
