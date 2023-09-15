@@ -14,5 +14,6 @@ https://sergeymakeev.com/z8/
 https://sergeymakeev.com/z8/index.html?ls=z8_game&code=https://raw.githubusercontent.com/SergeyMakeev/z8/master/practice/game.z8
 
 
-[Post 0001](/posts/post0001.md)
+Test Index  
+[9-Sep-2023: Post 0001](/posts/post0001.md)
 
