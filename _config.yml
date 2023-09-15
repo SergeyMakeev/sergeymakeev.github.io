@@ -1,8 +1,0 @@
-name: SergeyMakeev
-url: http://sergeymakeev.com
-markdown: kramdown
-permalink: /:year/:month/:day/:title/
-gems:
-  - jekyll-redirect-from
-kramdown:
-  input: GFM

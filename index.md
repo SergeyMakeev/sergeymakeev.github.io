@@ -1,14 +1,18 @@
----
-layout: default
-title: Home
----
-
-> Hello world
+#  Another programming blog
 
 
-{% for post in site.posts limit:5 %}
-### {{ post.date | date_to_long_string }} <a href="{{ post.url }}">{{ post.title }}</a>
-{{ post.excerpt }}
-{% endfor %}
+https://sergeymakeev.com/pbr/view.html
 
-### [More...](/archives/)
+https://sergeymakeev.com/
+
+https://sergeymakeev.com/old_index.html
+
+https://sergeymakeev.com/gaussian_generator.html
+
+https://sergeymakeev.com/z8/
+
+https://sergeymakeev.com/z8/index.html?ls=z8_game&code=https://raw.githubusercontent.com/SergeyMakeev/z8/master/practice/game.z8
+
+
+[Post 0001](/posts/post0001.md)
+

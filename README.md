@@ -14,6 +14,3 @@ https://sergeymakeev.com/z8/
 
 https://sergeymakeev.com/z8/index.html?ls=z8_game&code=https://raw.githubusercontent.com/SergeyMakeev/z8/master/practice/game.z8
 
-
-[An Internal Link](/test.md)
-
