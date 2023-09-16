@@ -1,4 +1,4 @@
-#  Sergey's Lair
+#  A Programmer's Tales
 
 Yet another programmer's blog  
 
