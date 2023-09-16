@@ -52,6 +52,7 @@
 
     // we don't want caching
     $.ajaxSetup({ cache: false });    
+    console.log("Fetch URL: '" + targetUrl + "'");
     $.get( targetUrl, function( data ) {
       //console.log(data);
       document.getElementById('content').innerHTML = marked.parse(data);
