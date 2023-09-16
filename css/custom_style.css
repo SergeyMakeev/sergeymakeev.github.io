@@ -49,6 +49,12 @@ h6 {
     color: #ffffff;
 }
 
+#footer {
+    max-height: 80px; 
+    margin: 0 auto; 
+    text-align: center;
+}
+
 #content {
     background-color: #181818;
     max-width: 1000px; 
@@ -74,5 +80,9 @@ a:active {
 code {
   background-color: #282a36;
   font-size: 18px;
+}
 
+.icon {
+  width: 24px;
+  height: 24px;
 }

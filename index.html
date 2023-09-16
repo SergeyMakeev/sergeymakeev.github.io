@@ -10,7 +10,16 @@
   <link rel="stylesheet" type="text/css" href="css/dracula.css">
 </head>
 <body>
-  <div id="content"></div>
+  <div id="main">
+    <div id="content"></div>
+    <div id="footer">
+      <hr>
+      <a href="https://sergeymakeev.com/"><img src="img/home-dark.svg" alt="Home" class="icon"></a>
+      <a href="https://github.com/SergeyMakeev"><img src="img/github-dark.svg" alt="GitHub" class="icon"></a>
+      <a href="https://www.linkedin.com/in/sergeymakeev/"><img src="img/linkedin-dark.svg" alt="LinkedIn" class="icon"></a>
+      <a href="https://twitter.com/SergeyMakeev"><img src="img/twitter-dark.svg" alt="Twitter" class="icon"></a>
+    </div>
+  </div>
   <script>
     const escapeMap = {
         "&": "&amp;",
@@ -56,15 +65,13 @@
     $.get( targetUrl, function( data ) {
       //console.log(data);
       document.getElementById('content').innerHTML = marked.parse(data);
-
-      var currentUrl = location.protocol + '//' + location.host + location.pathname;
       var anchors = document.getElementsByTagName("a");
 
         for (var i = 0; i < anchors.length; i++) {
             var url = anchors[i].getAttribute("href")
             if (url && url.startsWith("/")) {
                 //console.log("local ref: " + url);
-                var newUrl = currentUrl + "?url=" + url;
+                var newUrl = "https://sergeymakeev.com/index.html?url=" + url;
                 //console.log(newUrl);
                 anchors[i].href = newUrl;
             }
