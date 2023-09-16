@@ -1,4 +1,4 @@
-#  Sergey's lair
+#  Sergey's Lair
 
 Yet another programmer's blog  
 
