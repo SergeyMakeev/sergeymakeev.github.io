@@ -70,3 +70,7 @@ a:hover {
 a:active {
   color: #2f81f7;
 }
+
+code {
+  background-color: #282a36;
+}
