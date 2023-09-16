@@ -2,8 +2,8 @@ body {
     background-color: #181818;
     color: #cccccc;
     font-family: monospace;
-	font-size: 16px;
-	font-style: normal;
+    font-size: 20px;
+    font-style: normal;
     font-variant: normal;
 }
 
@@ -73,4 +73,6 @@ a:active {
 
 code {
   background-color: #282a36;
+  font-size: 16px;
+
 }
