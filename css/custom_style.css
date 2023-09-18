@@ -89,9 +89,16 @@ code {
   height: 32px;
 }
 
+hr {
+  height: 1px;
+  background-color: #484848;
+  border: none;
+}
 
-@media only screen and (max-width: 30em) {
+
+@media only screen and (max-width: 100ch) {
   body {
+      background-color: #181818;
       font-size: 26px;
       line-height: 1.6;
   }
