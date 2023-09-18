@@ -14,7 +14,7 @@
     <div id="content"></div>
     <div id="footer">
       <hr>
-      <a href="https://sergeymakeev.com/"><img src="img/home-dark.svg" alt="Home" class="icon"></a>
+      <a id="home_button" href="https://sergeymakeev.com/"><img src="img/home-dark.svg" alt="Home" class="icon"></a>
       <a href="https://github.com/SergeyMakeev"><img src="img/github-dark.svg" alt="GitHub" class="icon"></a>
       <a href="https://www.linkedin.com/in/sergeymakeev/"><img src="img/linkedin-dark.svg" alt="LinkedIn" class="icon"></a>
       <a href="https://twitter.com/SergeyMakeev"><img src="img/twitter-dark.svg" alt="Twitter" class="icon"></a>
@@ -59,6 +59,10 @@
     };
     marked.setOptions({ renderer });
 
+    const homeUrl = window.location.origin + window.location.pathname
+    home_anchor = document.getElementById("home_button");
+    home_anchor.setAttribute("href", homeUrl);
+
     // we don't want caching
     $.ajaxSetup({ cache: false });    
     console.log("Fetch URL: '" + targetUrl + "'");
@@ -71,7 +75,7 @@
             var url = anchors[i].getAttribute("href")
             if (url && url.startsWith("/")) {
                 //console.log("local ref: " + url);
-                var newUrl = "https://sergeymakeev.com/index.html?url=" + url;
+                var newUrl = homeUrl + "?url=" + url;
                 //console.log(newUrl);
                 anchors[i].href = newUrl;
             }

@@ -5,6 +5,7 @@ body {
     font-size: 20px;
     font-style: normal;
     font-variant: normal;
+    line-height: 1.3;
 }
 
 img {
@@ -86,4 +87,23 @@ code {
   opacity: 0.3;
   width: 32px;
   height: 32px;
+}
+
+
+@media only screen and (max-width: 120ch) {
+  body {
+      font-size: 26px;
+      line-height: 1.6;
+  }
+
+  code {
+    font-size: 24px;
+  }
+
+  .icon {
+    width: 40px;
+    height: 40px;
+  }
+
+
 }
