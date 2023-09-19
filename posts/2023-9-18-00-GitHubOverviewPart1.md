@@ -34,7 +34,7 @@ Hence, I called this a "proxy allocator".
 It turned out to be blazing fast (~40 CPU cycles per allocation) and solved most of the problems caused by "Typical C++ Builshit".
 And of course, I shamelessly named it `smmalloc`, which stands for Sergey Makeev Memory Allocator :) 
 
-Please note that modern memory allocators (like `mimalloc` & co) should be able to handle arbitrary-sized allocations reasonably very well,
+Please note that modern memory allocators (like `mimalloc` & co) should be able to handle arbitrary-sized allocations reasonably well,
 so you might not get too much performance benefits in that case. But if you still rely on a default OS memory allocator,
 it totally makes sense to give `smmaloc` a try, especially if your application is doing millions of small allocations per second. 
 
