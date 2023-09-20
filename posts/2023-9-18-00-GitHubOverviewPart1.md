@@ -23,7 +23,7 @@ But hey, some of these insights made their way into Roblox's proprietary Task Sc
 
 https://github.com/SergeyMakeev/smmalloc  
 
-During my time at my.games, we were elbows deep in porting [Warface](https://warface.com/en/) for PS4/X1/Switch - an FPS game built using CryEngine.
+During my time at `MY.GAMES`, we were elbows deep in porting [Warface](https://warface.com/en/) for PS4/X1/Switch - an FPS game built using CryEngine.
 And, of course, performance was the most challenging thing to solve (it is never enough, especially if you work on a competitive PvP shooter game).
 A staggering number of tiny memory allocations dragging performance down was the problem (as you all may know, Jaguar is not the most powerful CPU).  
 

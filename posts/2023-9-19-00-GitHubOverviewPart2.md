@@ -8,7 +8,7 @@ https://github.com/SergeyMakeev/ArcadeCarPhysics
 
 I've always been fascinated by the thrill arcade racing games like Burnout, TrackMania, and others provide.
 They let you pull off insane stunts, driving at breakneck speeds. Despite the seemingly chaotic gameplay, underlying predictability and control make the experience super fun.
-I always wanted to work on something like this but never had the chance. During my tenure at my.games, we did collaborate with Slightly Mad Studios on a game called "World of Speed", but that's a different story.  
+I always wanted to work on something like this but never had the chance. During my tenure at `MY.GAMES`, we did collaborate with `Slightly Mad Studios` on a game called [World of Speed](https://store.steampowered.com/app/623880/World_of_Speed/), but that's a different story.  
 
 
 Eager to capture the essence of these games, I embarked on a mission: to dissect the mechanics behind arcade racers and to create my own playable racing demo.
