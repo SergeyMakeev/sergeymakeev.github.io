@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>QR code generator</title>
+    <script type="text/javascript" src="qrcode.min.js"></script>
+</head>
+
+<body>
+    <div>
+        <table>
+            <tr>
+                <td>Type QR text</td>
+                <td><input type="text" id=text_input onkeydown="buttonPress(event, this)"
+                        value="https://sergeymakeev.com"></td>
+            </tr>
+        </table>
+    </div>
+    <div id="qrcode"></div>
+    <script>
+
+        function updateQrCode() {
+            var qrInput = document.getElementById("text_input");
+
+            var textToEncode = qrInput.value;
+            console.log(textToEncode);
+
+            var qrCodeDiv = document.getElementById("qrcode");
+            qrCodeDiv.innerHTML = "";
+
+            var qrcode = new QRCode(qrCodeDiv, {
+                text: textToEncode,
+                width: 128,
+                height: 128,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        function buttonPress(event, element) {
+            updateQrCode();
+        }
+
+        updateQrCode();
+
+    </script>
+</body>
