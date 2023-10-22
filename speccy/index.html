@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Speccy Demo</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+  <div id="emuldiv"></div>
+<br> 
+  <canvas id="canvas" style="display: none">Your browser does not support online emulation!</canvas>
+         <script>
+          function unreal_go(path) {
+            if (typeof Module === "undefined") {
+              window.Module = { preRun: [], postRun: [], onInit:function(){ Module.ccall("OnCommand", null, ["string"], ["filtering=off"]); Module.ccall("OnCommand", null, ["string"], ["zoom=fill screen"]); }, onReady: function() { Module.ccall("OpenFile", null, ["string"], [path]); }, canvas: (function() { return document.getElementById("canvas"); })(), locateFile: function(file) { return '/us/' + file; } };
+              var inject = document.createElement("script"); inject.src = "/us/unreal_speccy_portable.js"; document.body.appendChild(inject);
+            }
+            document.getElementById("emuldiv").scrollIntoView();
+            document.getElementById("canvas").style.display = "block";
+          }
+
+        unreal_go("/humble_demo_release.tap");
+        </script>
+</body>
