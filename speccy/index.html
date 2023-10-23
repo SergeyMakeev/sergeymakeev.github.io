@@ -7,29 +7,69 @@
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
-<body>
-  <div id="emuldiv"></div>
-<br> 
-  <canvas id="canvas" style="display: none">Your browser does not support online emulation!</canvas>
-   <div id="hint">
-     Humble Speccy Demo (click here for autoload)
-   </div>
-
-         <script>
-          function unreal_go(path) {
+<body onload="print_help_message()">
+    <canvas id="canvas_fake" width="960px" height="720px" style="display: block" onclick="help_message_clicked();">Press to Play</canvas>
+    <canvas id="canvas" style="display: none">Your browser does not support online emulation!</canvas>
+    <script>
+        function unreal_go(path) {
+            console.log("unreal_go");
             if (typeof Module === "undefined") {
-              window.Module = { preRun: [], postRun: [], onInit:function(){ Module.ccall("OnCommand", null, ["string"], ["filtering=off"]); Module.ccall("OnCommand", null, ["string"], ["zoom=fill screen"]); }, onReady: function() { Module.ccall("OpenFile", null, ["string"], [path]); }, canvas: (function() { return document.getElementById("canvas"); })(), locateFile: function(file) { return '/us/' + file; } };
-              var inject = document.createElement("script"); inject.src = "/us/unreal_speccy_portable.js"; document.body.appendChild(inject);
+                console.log("Initialize Module");
+                window.Module = {
+                    preRun: [],
+                    postRun: [],
+                    onInit: function () {
+                        console.log("onInit");
+                        Module.ccall("OnCommand", null, ["string"], ["filtering=off"]);
+                        Module.ccall("OnCommand", null, ["string"], ["zoom=fill screen"]);
+                    },
+                    onReady: function () {
+                        console.log("onReady");
+                        Module.ccall("OpenFile", null, ["string"], [path]);
+                    },
+                    canvas: (function () {
+                        return document.getElementById("canvas");
+                    })(),
+                    locateFile: function (file) {
+                        return '/us/' + file;
+                    }
+                };
+
+                var inject = document.createElement("script");
+                inject.src = "/us/unreal_speccy_portable.js";
+                document.body.appendChild(inject);
+                document.getElementById("canvas").style.display = "block";
+                
             }
-            document.getElementById("emuldiv").scrollIntoView();
-            document.getElementById("canvas").style.display = "block";
-          }
+        }
 
-        var hintDiv = document.getElementById("hint");
-        hintDiv.innerHTML = "";
+        function help_message_clicked() {
+            console.log("Clicked");
+            const canvas = document.getElementById("canvas_fake");
+            canvas.remove();
+            unreal_go("humble_demo.tap");
+        }
+      
+        function print_help_message() {
+            //
+            // Autoplay Policy require a user to explicitly interact with the web page
+            // https://developer.chrome.com/blog/autoplay/#web-audio
+            //
+            const canvas = document.getElementById("canvas_fake");
+            const  ctx = canvas.getContext("2d");            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.rect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#cecbce";
+            ctx.fill();            
 
-        unreal_go("humble_demo.tap");
+            ctx.textAlign = "center";
+            ctx.fillStyle = "black";
+            ctx.font = "20px monospace";
+            ctx.fillText("Press to Play", canvas.width * 0.5, canvas.height * 0.5);
+        }
+        
 
-        </script>
 
-</body>
+    </script>
+
+    </body>
