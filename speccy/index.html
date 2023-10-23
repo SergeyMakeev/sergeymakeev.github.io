@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Speccy Demo</title>
+    <title>Humble Demo</title>
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
@@ -11,6 +11,10 @@
   <div id="emuldiv"></div>
 <br> 
   <canvas id="canvas" style="display: none">Your browser does not support online emulation!</canvas>
+   <div id="hint">
+     Humble Speccy Demo (click here for autoload)
+   </div>
+
          <script>
           function unreal_go(path) {
             if (typeof Module === "undefined") {
@@ -21,10 +25,11 @@
             document.getElementById("canvas").style.display = "block";
           }
 
+        var hintDiv = document.getElementById("hint");
+        hintDiv.innerHTML = "";
+
         unreal_go("humble_demo.tap");
+
         </script>
 
-   <div>
-     Humble Speccy Demo (click here for autoload)
-   </div>
 </body>
